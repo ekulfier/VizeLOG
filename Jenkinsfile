@@ -23,15 +23,11 @@ pipeline {
 			}
     	}
 
-		stage('Change Workspace to google service') {
-			steps {
-				sh "cd googleservice & cd googleservice"
-			}
-		}
-
 		stage('Unit Tests - npm test:ci') {
 			steps {
-				sh "npm install && npm run test:ci"
+				dir('googleservice') {
+					sh "npm install && npm run test:ci"
+				}
 			}
 		}
 
@@ -57,20 +53,21 @@ pipeline {
 
 		stage('Vulnerability Scan - Docker') {
 			steps {
-				parallel(
-					"Dependency Scan": {
-						dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-					},
-					"Trivy Scan": {
-						sh "trivy fs . > trivyfs.txt"
-					},
-					"OPA Conftest": {
-						sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile'
-					}
-				)
+				dir('googleservice') {
+					parallel(
+						"Dependency Scan": {
+							dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+						},
+						"Trivy Scan": {
+							sh "trivy fs . > trivyfs.txt"
+						},
+						"OPA Conftest": {
+							sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile'
+						}
+					)
+				}
 			}
     	}
 	}
-
 	
 }
