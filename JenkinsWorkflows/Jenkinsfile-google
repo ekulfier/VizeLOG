@@ -42,7 +42,7 @@ pipeline {
 				dir('googleservice') {
 					withSonarQubeEnv('sonar-server') {
                     sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
-                    -Dsonar.projectKey=googleservice '''
+                    -Dsonar.projectKey=googleservice -Dsonar.exclusions=output/** '''
 					}
 					timeout(time: 30, unit: 'MINUTES') {
 						script {
@@ -79,7 +79,7 @@ pipeline {
 	post {
     	always {
       		dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
-			publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'output/coverage/jest', reportFiles: 'index.html', reportName: 'UNIT TEST JEST Report', reportTitles: 'unit test with jest', useWrapperFileDirectly: true])
+			publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'googleservice/output/coverage/jest', reportFiles: 'index.html', reportName: 'UNIT TEST JEST Report', reportTitles: 'unit test with jest', useWrapperFileDirectly: true])
     	}
   	}
 	
