@@ -53,8 +53,9 @@ pipeline {
 
 		stage('Vulnerability Scan - Docker') {
 			steps {
-				dir('googleservice') {
-					parallel(
+				parallel(
+					dir('googleservice') {
+
 						"Dependency Scan": {
 							dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
 						},
@@ -64,8 +65,8 @@ pipeline {
 						"OPA Conftest": {
 							sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile'
 						}
-					)
-				}
+					}
+				)
 			}
     	}
 	}
