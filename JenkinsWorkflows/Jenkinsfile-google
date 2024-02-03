@@ -39,15 +39,17 @@ pipeline {
 
 		stage('SonarQube - SAST') {
 			steps {
-				withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice/googleservice \
+				dir('googleservice') {
+					withSonarQubeEnv('sonar-server') {
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
                     -Dsonar.projectKey=googleservice '''
-                }
-				timeout(time: 30, unit: 'MINUTES') {
-          			script {
-            			waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
-          			}
-        		}
+					}
+					timeout(time: 30, unit: 'MINUTES') {
+						script {
+							waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
+						}
+					}
+				}	
             }
 		}
 
@@ -76,7 +78,8 @@ pipeline {
 
 	post {
     	always {
-      		dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+      		dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+			publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'output/coverage/jest', reportFiles: 'index.html', reportName: 'UNIT TEST JEST Report', reportTitles: 'unit test with jest', useWrapperFileDirectly: true])
     	}
   	}
 	
