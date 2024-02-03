@@ -40,7 +40,7 @@ pipeline {
 		stage('SonarQube - SAST') {
 			steps {
 				withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
+                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice/googleservice \
                     -Dsonar.projectKey=googleservice '''
                 }
 				timeout(time: 30, unit: 'MINUTES') {
