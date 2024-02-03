@@ -25,7 +25,7 @@ pipeline {
 
 		stage('Change Workspace to google service') {
 			steps {
-				sh "cd googleservice"
+				sh "cd googleservice & cd googleservice"
 			}
 		}
 
