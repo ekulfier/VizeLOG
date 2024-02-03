@@ -54,20 +54,30 @@ pipeline {
 		stage('Vulnerability Scan - Docker') {
 			steps {
 				parallel(
-					dir('googleservice') {
-						"Dependency Scan": {
+					"Dependency Scan": {
+						dir('googleservice') {
 							dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
-						},
-						"Trivy Scan": {
+						}
+					},
+					"Trivy Scan": {
+						dir('googleservice') {
 							sh "trivy fs . > trivyfs.txt"
-						},
-						"OPA Conftest": {
+						}
+					},
+					"OPA Conftest": {
+						dir('googleservice') {
 							sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-docker-security.rego Dockerfile'
 						}
 					}
-				)
+                )
 			}
     	}
 	}
+
+	post {
+    	always {
+      		dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+    	}
+  	}
 	
 }
