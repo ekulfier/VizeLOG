@@ -11,14 +11,6 @@ app.use(json());
 
 app.use(searchTrendRouter);
 
-function getScoreA() {
-  return "A";
-}
-
-function getScoreB() {
-  return "B";
-}
-
 
 app.all('*', async (req, res) => {
   throw new Error();
@@ -26,4 +18,4 @@ app.all('*', async (req, res) => {
 
 // middleware
 
-export { app, getScoreA, getScoreB };
+export { app };
