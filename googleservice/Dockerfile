@@ -2,9 +2,9 @@
 FROM node:18-alpine as builder
 RUN addgroup -S pipeline && adduser -S k8s-pipeline -G pipeline
 WORKDIR /app
-COPY package*.json ./
+COPY tsconfig.json package.json ./
 RUN npm install --only=prod
-COPY . .
+COPY src .
 RUN chown -R k8s-pipeline:pipeline /app
 USER k8s-pipeline
 
