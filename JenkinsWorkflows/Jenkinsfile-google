@@ -8,6 +8,7 @@ pipeline {
 
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
+		imageName = "thecodingadventure/googleservice:${GIT_COMMIT}"
     }
 
     stages {
@@ -74,6 +75,18 @@ pipeline {
                 )
 			}
     	}
+
+		stage('Docker Build and Push') {
+			steps {
+				dir("googleservice") {
+					withDockerRegistry([credentialsId: "docker-hub", url: "", toolName: 'docker']) {
+					sh 'printenv'
+					sh "docker build -t ${imageName} . "
+					sh 'docker push ${imageName}'
+					}
+				}
+      		}
+    	}	
 	}
 
 	post {
