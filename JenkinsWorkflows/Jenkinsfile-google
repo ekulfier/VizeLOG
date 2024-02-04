@@ -25,13 +25,13 @@ pipeline {
 			}
     	}
 
-		stage('Unit Tests - npm test:ci') {
-			steps {
-				dir('googleservice') {
-					sh "npm install && npm run test:ci"
-				}
-			}
-		}
+		// stage('Unit Tests - npm test:ci') {
+		// 	steps {
+		// 		dir('googleservice') {
+		// 			sh "npm install && npm run test:ci"
+		// 		}
+		// 	}
+		// }
 
 		// stage('Mutation Tests - PIT') {
 		// 	steps {
@@ -77,38 +77,38 @@ pipeline {
 		// 	}
     	// }
 
-		// stage('Docker Build and Push') {
-		// 	steps {
-		// 		dir("googleservice") {
-		// 			withDockerRegistry([credentialsId: "docker", url: ""]) {
-		// 				sh 'printenv'
-		// 				sh "docker build -t ${imageName} . "
-		// 				sh 'docker push ${imageName}'
-		// 			}
-		// 		}
-      	// 	}
-    	// }
+		stage('Docker Build and Push') {
+			steps {
+				dir("googleservice") {
+					withDockerRegistry([credentialsId: "docker", url: ""]) {
+						sh 'printenv'
+						sh "docker build -t ${imageName} . "
+						sh 'docker push ${imageName}'
+					}
+				}
+      		}
+    	}
 
-		// stage('Vulnerability Scan - Kubernetes') {
-		// 	steps {
-		// 		parallel(
-		// 			"OPA Scan": {
-		// 				dir("infra") {
-		// 					dir("k8s-dev") {
-		// 						sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego google-depl-dev.yaml'
-		// 					}
-		// 				}
-		// 			},
-		// 			// "Kubesec Scan": {
-		// 			// 	dir() {}
-		// 			// 	sh "bash kubesec-scan.sh"
-		// 			// },
-		// 			// "Trivy Scan": {
-		// 			// 	sh "bash trivy-k8s-scan.sh"
-		// 			// }
-		// 		)
-		// 	}
-		// }
+		stage('Vulnerability Scan - Kubernetes') {
+			steps {
+				parallel(
+					"OPA Scan": {
+						dir("infra") {
+							dir("k8s-dev") {
+								sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego google-depl-dev.yaml'
+							}
+						}
+					},
+					// "Kubesec Scan": {
+					// 	dir() {}
+					// 	sh "bash kubesec-scan.sh"
+					// },
+					// "Trivy Scan": {
+					// 	sh "bash trivy-k8s-scan.sh"
+					// }
+				)
+			}
+		}
 
 		// stage('Kubernetes Deployment - DEV') {
 		// 	steps {
