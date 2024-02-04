@@ -23,11 +23,12 @@ spec:
         - image: replace
           name: googleservice-container
           volumeMounts:
-        - mountPath: /tmp
-          name: vol
+          - mountPath: /tmp
+            name: vol
           securityContext:
             runAsNonRoot: true
             runAsUser: 100
+            readOnlyRootFilesystem: true
 ---
 apiVersion: v1
 kind: Service
