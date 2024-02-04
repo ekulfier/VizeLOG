@@ -15,9 +15,16 @@ spec:
       labels:
         app: googleservice
     spec:
+      volumes:
+      - name: vol
+        emptyDir: {}
+      serviceAccountName: jenkins
       containers:
         - image: replace
           name: googleservice-container
+          volumeMounts:
+        - mountPath: /tmp
+          name: vol
           securityContext:
             runAsNonRoot: true
             runAsUser: 100
