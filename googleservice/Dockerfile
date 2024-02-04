@@ -5,7 +5,6 @@ WORKDIR /app
 COPY tsconfig.json package.json ./
 COPY src/ /app/src/
 RUN npm install --only=prod
-COPY node_modules /app/node_modules
 RUN chown -R k8s-pipeline:pipeline /app
 USER k8s-pipeline
 
@@ -13,7 +12,4 @@ USER k8s-pipeline
 FROM node:18-alpine
 WORKDIR /app
 COPY --from=builder /app .
-RUN addgroup -S pipeline && adduser -S k8s-pipeline -G pipeline && \
-    chown -R k8s-pipeline:pipeline /app
-USER k8s-pipeline
 ENTRYPOINT ["npm", "start"]
