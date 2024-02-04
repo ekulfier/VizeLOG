@@ -88,25 +88,16 @@ pipeline {
       		}
     	}
 
-		stage('check kube version - DEV') {
-			steps {
-				dir("infra") {
-					dir("k8s-dev") {
-						withKubeConfig([credentialsId: 'kubeconfig']) {
-							sh "kubectl version --short"
-						}
-					}
-				}
-			}
-    	}
-
 		stage('Kubernetes Deployment - DEV') {
 			steps {
 				dir("infra") {
 					dir("k8s-dev") {
-						withKubeConfig([credentialsId: 'kubeconfig']) {
+						withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
+							sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
+							sh 'chmod u+x ./kubectl'  
+							sh './kubectl get nodes'
 							sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
-							sh "kubectl apply -f google-depl-dev.yaml -n dev"
+							sh "./kubectl apply -f google-depl-dev.yaml -n dev"
 						}
 					}
 				}
