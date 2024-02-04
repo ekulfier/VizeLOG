@@ -11,9 +11,9 @@ scan_score=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kub
 
 
 # using kubesec docker image for scanning
-# scan_result=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml)
-# scan_message=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].message -r)
-# scan_score=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].score)
+scan_result=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml)
+scan_message=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].message -r)
+scan_score=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].score)
 
 	
     # Kubesec scan result processing
