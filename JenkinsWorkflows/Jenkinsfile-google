@@ -106,9 +106,8 @@ pipeline {
 						dir("infra") {
 							dir("k8s-dev") {
 								sh '''
-									scan_result=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml)
-									scan_message=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].message -r)
-									scan_score=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].score)
+									scan_message=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan | jq .[0].message -r ) 
+									scan_score=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan | jq .[0].score )
 									echo "Score is $scan_score"
 									echo "Kubesec Scan $scan_message"
 								'''
