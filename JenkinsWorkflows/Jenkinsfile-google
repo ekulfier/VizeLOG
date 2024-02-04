@@ -42,14 +42,17 @@ pipeline {
 		stage('SonarQube - SAST') {
 			steps {
 				dir('googleservice') {
-					withSonarQubeEnv('sonar-server') {
-                    sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
-                    -Dsonar.projectKey=googleservice -Dsonar.exclusions=output/** '''
-					}
-					timeout(time: 30, unit: 'MINUTES') {
-						script {
-							waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
+					dir('src') {
+						withSonarQubeEnv('sonar-server') {
+						sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
+						-Dsonar.projectKey=googleservice -Dsonar.exclusions=output/** '''
 						}
+						timeout(time: 30, unit: 'MINUTES') {
+							script {
+								waitForQualityGate abortPipeline: true, credentialsId: 'Sonar-token'
+							}
+						}
+
 					}
 				}	
             }

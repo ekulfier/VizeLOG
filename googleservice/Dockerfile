@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 RUN addgroup -S pipeline && adduser -S k8s-pipeline -G pipeline
 WORKDIR /app
 COPY tsconfig.json package.json ./
