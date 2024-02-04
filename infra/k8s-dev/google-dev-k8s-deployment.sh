@@ -4,7 +4,11 @@
 #k8s-deployment.sh
 
 curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
-chmod u+x ./kubectl
+
+sleep 20s
+
+# Make it executable
+chmod +x ./kubectl
 
 sed -i "s#replace#${imageName}#g" google-depl-dev.yaml
 

@@ -133,7 +133,7 @@ pipeline {
 						dir("infra") {
 							dir("k8s-dev") {
 								withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-									sh "bash google-dev-k8s-deployment.sh"
+									sh "bash ./google-dev-k8s-deployment.sh"
 								}
 							}
 						}
