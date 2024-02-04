@@ -9,6 +9,7 @@ USER k8s-pipeline
 
 # Final Stage
 FROM node:18-alpine
+RUN addgroup -S pipeline && adduser -S k8s-pipeline -G pipeline
 WORKDIR /app
 COPY --from=builder /app .
 RUN chown -R k8s-pipeline:pipeline /app
