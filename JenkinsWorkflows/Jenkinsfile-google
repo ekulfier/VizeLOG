@@ -133,7 +133,13 @@ pipeline {
 						dir("infra") {
 							dir("k8s-dev") {
 								withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-									sh "bash ./google-dev-k8s-deployment.sh"
+									sh '''
+										#!/bin/bash
+										curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
+										chmod +x ./kubectl
+										sed -i "s#replace#${imageName}#g" google-depl-dev.yaml
+										./kubectl -n dev apply -f google-depl-dev.yaml
+									'''
 								}
 							}
 						}
@@ -142,7 +148,22 @@ pipeline {
 						dir("infra") {
 							dir("k8s-dev") {
 								withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-									sh "bash dev-k8s-deployment-rollout-status.sh"
+									sh '''
+										#!/bin/bash
+										curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
+										chmod u+x ./kubectl
+
+										sleep 60s
+
+										if [[ $(./kubectl -n dev rollout status deploy ${deploymentName} --timeout 5s) != *"successfully rolled out"* ]]; 
+										then     
+											echo "Deployment ${deploymentName} Rollout has Failed"
+											./kubectl -n dev rollout undo deploy ${deploymentName}
+											exit 1;
+										else
+											echo "Deployment ${deploymentName} Rollout is Success"
+										fi
+									'''
 								}
 							}
 						}
