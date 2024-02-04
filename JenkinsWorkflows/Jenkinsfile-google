@@ -100,12 +100,19 @@ pipeline {
 						}
 					},
 					"Kubesec Scan": {
-						dir() {}
-						sh "bash google-kubesec-scan.sh"
+						dir("infra") {
+							dir("k8s-dev") {
+								sh "bash google-kubesec-scan.sh"
+							}
+						}
 					},
-					// "Trivy Scan": {
-					// 	sh "bash trivy-k8s-scan.sh"
-					// }
+					"Trivy Scan": {
+						dir("infra") {
+							dir("k8s-dev") {
+								sh "bash trivy-k8s-scan.sh"
+							}
+						}
+					}
 				)
 			}
 		}
