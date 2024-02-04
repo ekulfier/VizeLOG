@@ -136,7 +136,7 @@ pipeline {
 									sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
 									sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
 									sh 'chmod u+x ./kubectl'
-									sh "./kubectl apply -f google-depl-dev.yaml -n dev"
+									sh "./kubectl -n dev apply -f google-depl-dev.yaml"
 								}
 							}
 						}
@@ -152,7 +152,7 @@ pipeline {
 
 										curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
 										chmod u+x ./kubectl
-										
+
 										if [[ $(./kubectl -n dev rollout status deploy ${deploymentName} --timeout 5s) != *"successfully rolled out"* ]]; 
 										then     
 											echo "Deployment ${deploymentName} Rollout has Failed"
