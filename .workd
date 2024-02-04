@@ -1,0 +1,131 @@
+pipeline {
+  agent any
+
+  stages {
+
+    stage('git version') {
+      steps {
+        sh "git version"
+      }
+    }
+
+    stage('docker version') {
+      steps {
+        sh "docker -v"
+      }
+    }
+    
+    stage('Integrate Remote k8s with Jenkins ') {
+        steps {
+            withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
+              sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
+              sh 'chmod u+x ./kubectl'  
+              sh './kubectl get nodes'
+              sh "./kubectl get nodes"
+            }
+            
+        }
+    }
+    
+    stage('Create YAML File') {
+            steps {
+                withDockerRegistry([credentialsId: "docker", url: ""]) {
+                    script {
+                    def yamlContent = """
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: googleservice
+  name: googleservice-depl
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: googleservice
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: googleservice
+    spec:
+      volumes:
+      - name: vol
+        emptyDir: {}
+      serviceAccountName: jenkins
+      containers:
+        - image: replace
+          name: googleservice-container
+          volumeMounts:
+          - mountPath: /tmp
+            name: vol
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 100
+            readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels: 
+    app: googleservice
+  name: googleservice-srv
+spec:
+  selector:
+    app: googleservice
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+    selector:
+      app: devsecops
+    type: NodePort
+"""
+
+                        writeFile file: 'google-depl-dev.yaml', text: yamlContent
+                        
+                        def scanMessage = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].message -r', returnStdout: true).trim()
+                        def scanScore = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].score', returnStdout: true).trim()
+    
+                        echo "Score is ${scanScore}"
+                        echo "Kubesec Scan ${scanMessage}"
+    
+                        if (scanScore.toInteger() >= 4) {
+                            echo "Scanning Kubernetes Resource has Passed"
+                        } else {
+                            echo "Score is ${scanScore}, which is less than 4."
+                            echo "Scanning Kubernetes Resource has Failed"
+                            error "Scanning Kubernetes Resource has Failed"
+                        }
+                    }
+                }
+                
+            }
+        }
+
+    
+    // stage('scan') {
+    //     steps{
+    //         script {
+    //         def scanResult = sh(script: 'curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan', returnStdout: true).trim()
+    //         def scanMessage = sh(script: 'echo "${scanResult}" | jq .[0].message -r', returnStdout: true).trim()
+    //         def scanScore = sh(script: 'echo "${scanResult}" | jq .[0].score', returnStdout: true).trim()
+
+    //         echo "Score is ${scanScore}"
+    //         echo "Kubesec Scan ${scanMessage}"
+    //         }
+    //     }
+        
+    // }
+
+    // stage('kubernetes version') {
+    //   steps {
+    //     withKubeConfig([credentialsId: 'kubeconfig']) {
+    //       sh "kubectl version --short"
+    //     }
+    //     // sh ('aws eks update-kubeconfig --name Netflix --region ap-southeast-1')
+    //     // sh "kubectl version --short"
+    //   }
+    // }
+  }
+}

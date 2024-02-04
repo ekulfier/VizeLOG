@@ -105,12 +105,23 @@ pipeline {
 					"Kubesec Scan": {
 						dir("infra") {
 							dir("k8s-dev") {
-								sh '''
-									scan_message=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[0].message -r)
-									scan_score=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[0].score)
-									echo "Score is $scan_score"
-									echo "Kubesec Scan $scan_message"
-								'''
+								withDockerRegistry([credentialsId: "docker", url: ""]) {
+									script {
+										def scanMessage = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].message -r', returnStdout: true).trim()
+										def scanScore = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].score', returnStdout: true).trim()
+					
+										echo "Score is ${scanScore}"
+										echo "Kubesec Scan ${scanMessage}"
+					
+										if (scanScore.toInteger() >= 4) {
+											echo "Scanning Kubernetes Resource has Passed"
+										} else {
+											echo "Score is ${scanScore}, which is less than 4."
+											echo "Scanning Kubernetes Resource has Failed"
+											error "Scanning Kubernetes Resource has Failed"
+										}
+									}
+								}
 							}
 						}
 					},
