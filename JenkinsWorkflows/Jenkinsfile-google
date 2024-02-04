@@ -110,65 +110,65 @@ pipeline {
 			}
 		}
 
-		// stage('Kubernetes Deployment - DEV') {
-		// 	steps {
-		// 		dir("infra") {
-		// 			dir("k8s-dev") {
-		// 				withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-							// sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
-							// sh 'chmod u+x ./kubectl'  
-							// sh './kubectl get nodes'
-							// sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
-							// sh "./kubectl apply -f google-depl-dev.yaml -n dev"
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-    	// }	
-
-		stage('K8S Deployment - DEV') {
+		stage('Kubernetes Deployment - DEV') {
 			steps {
-				parallel(
-					"Deployment": {
-						dir("infra") {
-							dir("k8s-dev") {
-								withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-									sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
-									sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
-									sh 'chmod u+x ./kubectl'
-									sh "./kubectl -n dev apply -f google-depl-dev.yaml"
-								}
-							}
-						}
-					},
-					"Rollout Status": {
-						dir("infra") {
-							dir("k8s-dev") {
-								withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-									sh '''
-										#!/bin/bash
-
-										sleep 60s
-
-										curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
-										chmod u+x ./kubectl
-
-										if [[ $(./kubectl -n dev rollout status deploy ${deploymentName} --timeout 5s) != *"successfully rolled out"* ]]; 
-										then     
-											echo "Deployment ${deploymentName} Rollout has Failed"
-											./kubectl -n dev rollout undo deploy ${deploymentName}
-											exit 1;
-										else
-											echo "Deployment ${deploymentName} Rollout is Success"
-										fi
-									'''
-								}
-							}
+				dir("infra") {
+					dir("k8s-dev") {
+						withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
+							sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
+							sh 'chmod u+x ./kubectl'  
+							sh './kubectl get nodes'
+							sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
+							sh "./kubectl apply -f google-depl-dev.yaml -n dev"
 						}
 					}
-				)
+				}
 			}
-    	}
+    	}	
+
+		// stage('K8S Deployment - DEV') {
+		// 	steps {
+		// 		parallel(
+		// 			"Deployment": {
+		// 				dir("infra") {
+		// 					dir("k8s-dev") {
+		// 						withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
+		// 							sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
+		// 							sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
+		// 							sh 'chmod u+x ./kubectl'
+		// 							sh "./kubectl -n dev apply -f google-depl-dev.yaml"
+		// 						}
+		// 					}
+		// 				}
+		// 			},
+		// 			"Rollout Status": {
+		// 				dir("infra") {
+		// 					dir("k8s-dev") {
+		// 						withKubeConfig(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
+		// 							sh '''
+		// 								#!/bin/bash
+
+		// 								sleep 60s
+
+		// 								curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
+		// 								chmod u+x ./kubectl
+
+		// 								if [[ $(./kubectl -n dev rollout status deploy ${deploymentName} --timeout 5s) != *"successfully rolled out"* ]]; 
+		// 								then     
+		// 									echo "Deployment ${deploymentName} Rollout has Failed"
+		// 									./kubectl -n dev rollout undo deploy ${deploymentName}
+		// 									exit 1;
+		// 								else
+		// 									echo "Deployment ${deploymentName} Rollout is Success"
+		// 								fi
+		// 							'''
+		// 						}
+		// 					}
+		// 				}
+		// 			}
+		// 		)
+		// 	}
+    	// }
 	}
 
 	post {
