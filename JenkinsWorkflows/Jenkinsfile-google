@@ -12,7 +12,6 @@ pipeline {
 		imageName = "thecodingadventure/googleservice:${GIT_COMMIT}"
 		APP_NAME="thecodingadventure/googleservice"
 		IMAGE_TAG = "${GIT_COMMIT}"
-	    JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
     }
 
     stages {
