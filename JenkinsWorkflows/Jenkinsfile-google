@@ -10,6 +10,9 @@ pipeline {
         deploymentName = "googleservice-depl"
 		SCANNER_HOME = tool 'sonar-scanner'
 		imageName = "thecodingadventure/googleservice:${GIT_COMMIT}"
+		APP_NAME="thecodingadventure/googleservice"
+		IMAGE_TAG = "${GIT_COMMIT}"
+	    JENKINS_API_TOKEN = credentials("JENKINS_API_TOKEN")
     }
 
     stages {
@@ -135,6 +138,49 @@ pipeline {
 				)
 			}
 		}
+
+		stage ('Cleanup Artifacts') {
+           steps {
+               script {
+                    sh "docker rmi ${imageName}"
+               }
+          }
+       	
+		}
+
+       	stage("Checkout from SCM") {
+               steps {
+                   git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+               }
+        }
+
+        stage("Update the Deployment Tags") {
+            steps {
+                dir("apps/dev") {
+                    sh """
+                       cat google-deployment.yaml
+                       sed -i 's#${APP_NAME}.*#${APP_NAME}:${IMAGE_TAG}#g' google-deployment.yaml
+                       cat google-deployment.yaml
+                    """
+                }
+            }
+        }
+
+        stage("Push the changed deployment file to Git") {
+            steps {
+                dir("apps/dev") {
+                    sh """
+                       git config --global user.name "ekulfier"
+                       git config --global user.email "sorrachak.holy201@gmail.com"
+                       git add google-deployment.yaml
+                       git commit -m "Updated Deployment Manifest"
+                    """
+                    withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+                      sh "git push https://github.com/ekulfier/gitops-vizelog main"
+                    }
+                }
+            }
+        }
 
 		// stage('Kubernetes Deployment - DEV') {
 		// 	steps {
