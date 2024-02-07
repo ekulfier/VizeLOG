@@ -34,11 +34,11 @@ pipeline {
 			}
 		}
 
-		// stage('Mutation Tests - PIT') {
-		// 	steps {
-		// 		sh "mvn org.pitest:pitest-maven:mutationCoverage"
-		// 	}
-		// }
+		stage('Mutation Tests - PIT') {
+			steps {
+				sh "echo PIT Stage"
+			}
+		}
 
 		stage('SonarQube - SAST') {
 			steps {
@@ -106,23 +106,6 @@ pipeline {
 					"Kubesec Scan": {
 						dir("infra/k8s-dev") {
 							sh "bash google-kubesec-scan.sh"
-							// withDockerRegistry(credentialsId: "docker", toolName: 'docker') {
-								// script {
-								// 	def scanMessage = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].message -r', returnStdout: true).trim()
-								// 	def scanScore = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].score', returnStdout: true).trim()
-				
-								// 	echo "Score is ${scanScore}"
-								// 	echo "Kubesec Scan ${scanMessage}"
-				
-								// 	if (scanScore.toInteger() >= 4) {
-								// 		echo "Scanning Kubernetes Resource has Passed"
-								// 	} else {
-								// 		echo "Score is ${scanScore}, which is less than 4."
-								// 		echo "Scanning Kubernetes Resource has Failed"
-								// 		error "Scanning Kubernetes Resource has Failed"
-								// 	}
-								// }
-							// }
 						}
 					},
 					"Trivy Scan": {
@@ -139,11 +122,30 @@ pipeline {
                script {
                     sh "docker rmi ${imageName}"
                }
-          }
+          	}
        	
 		}
 
-       	stage("Checkout from SCM") {
+		stage('K8S Deployment - DEV') {
+			steps {
+				parallel(
+					"Deployment": {
+						dir("infra/k8s-dev") {
+							withKubeConfig([credentialsId: 'kubeconfig']) {
+								sh "bash google-dev-k8s-deployment.sh"
+							}
+						}
+					},
+						"Rollout Status": {
+							withKubeConfig([credentialsId: 'kubeconfig']) {
+								sh "bash google-dev-k8s-deployment-rollout-status.sh"
+						}
+					}	
+				)
+			}
+		}
+
+		stage("Checkout from SCM") {
                steps {
                    git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
                }
@@ -151,7 +153,7 @@ pipeline {
 
         stage("Update the Deployment Tags") {
             steps {
-                dir("apps/dev") {
+                dir("apps/staging") {
                     sh """
                        cat google-deployment.yaml
                        sed -i 's#${APP_NAME}.*#${APP_NAME}:${IMAGE_TAG}#g' google-deployment.yaml
@@ -163,20 +165,20 @@ pipeline {
 
         stage("Push the changed deployment file to Git") {
             steps {
-                dir("apps/dev") {
-                    sh """
-                       git config --global user.name "ekulfier"
-                       git config --global user.email "sorrachak.holy201@gmail.com"
-                       git add google-deployment.yaml
-                       git commit -m "Updated Deployment Manifest"
-                    """
-                    withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-                      sh "git push https://github.com/ekulfier/gitops-vizelog main"
-                    }
-                }
+				dir("apps/staging") {
+					sh """
+						git config --global user.name "ekulfier"
+						git config --global user.email "sorrachak.holy201@gmail.com"
+						git add google-deployment.yaml
+						git commit -m "Updated Deployment Manifest"
+					"""
+					withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+						sh "git push https://github.com/ekulfier/gitops-vizelog staging"
+					}
+				}   
             }
         }
-
+		
 	}
 
 	post {
