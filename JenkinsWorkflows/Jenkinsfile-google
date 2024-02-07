@@ -132,14 +132,27 @@ pipeline {
 					"Deployment": {
 						dir("infra/k8s-dev") {
 							withKubeConfig([credentialsId: 'kubeconfig']) {
-								sh "bash google-dev-k8s-deployment.sh"
+								sh "sed -i "s#replace#${imageName}#g" google-depl-dev.yaml"
+								sh "kubectl -n dev apply -f google-depl-dev.yaml"
 							}
 						}
 					},
 					"Rollout Status": {
 						dir("infra/k8s-dev") {
 							withKubeConfig([credentialsId: 'kubeconfig']) {
-								sh "bash google-dev-k8s-deployment-rollout-status.sh"
+								                 sleep(60)
+                    
+							// Check the rollout status of the deployment
+							def rolloutStatus = sh(script: "kubectl -n dev rollout status deploy ${deploymentName} --timeout 5s", returnStatus: true).trim()
+							
+							// If rollout status indicates failure, undo the deployment
+							if (rolloutStatus !=~ /.*successfully rolled out.*/) {
+								echo "Deployment ${deploymentName} Rollout has Failed"
+								sh "kubectl -n dev rollout undo deploy ${deploymentName}"
+								error "Deployment rollback triggered due to rollout failure"
+							} else {
+								echo "Deployment ${deploymentName} Rollout is Success"
+                    }
 							}
 						}
 					}	
