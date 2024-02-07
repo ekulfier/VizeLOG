@@ -1,7 +1,6 @@
 import request from "supertest";
 import { app } from "../../app";
 
-
 it('fail when not found keyword', async () => {
 	// make a keyword
 	const keyword = 'qwaszx';
@@ -24,4 +23,3 @@ it("fetch with keyword google trends api", async () => {
 
   expect(response.body).not.toEqual(undefined || {});
 });
-
