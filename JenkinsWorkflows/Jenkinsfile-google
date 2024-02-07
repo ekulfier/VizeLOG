@@ -84,10 +84,12 @@ pipeline {
 		stage('Docker Build and Push') {
 			steps {
 				dir("googleservice") {
-					withDockerRegistry(credentialsId: "docker", toolName: 'docker') {
-						sh 'printenv'
-						sh "docker build -t ${imageName} . "
-						sh 'docker push ${imageName}'
+					script {
+						withDockerRegistry(credentialsId: "docker", toolName: 'docker') {
+							sh 'printenv'
+							sh "docker build -t ${imageName} . "
+							sh 'docker push ${imageName}'
+						}
 					}
 				}
       		}
