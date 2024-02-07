@@ -18,7 +18,7 @@ spec:
       volumes:
       - name: vol
         emptyDir: {}
-      serviceAccountName: jenkins
+      serviceAccountName: default
       containers:
         - image: replace
           name: googleservice-container
