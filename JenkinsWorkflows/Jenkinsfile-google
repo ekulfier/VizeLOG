@@ -149,7 +149,7 @@ pipeline {
 									def rolloutStatus = sh(script: "kubectl -n dev rollout status deploy ${deploymentName} --timeout 10s", returnStatus: true).toString().trim()
 									
 									// If rollout status indicates failure, undo the deployment
-									if (rolloutStatus !=~ /.*successfully rolled out.*/) {
+									if (rolloutStatus != 0) {
 										echo "Deployment ${deploymentName} Rollout has Failed"
 										sh "kubectl -n dev rollout undo deploy ${deploymentName}"
 										error "Deployment rollback triggered due to rollout failure"
