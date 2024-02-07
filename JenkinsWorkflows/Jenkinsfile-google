@@ -149,7 +149,7 @@ pipeline {
 
 		stage("Checkout from SCM") {
                steps {
-                   git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+                   git branch: 'staging', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
                }
         }
 
