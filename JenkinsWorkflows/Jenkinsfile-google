@@ -42,8 +42,8 @@ pipeline {
 
 		stage('SonarQube - SAST') {
 			steps {
-				dir('googleservice') {
-					dir('src') {
+				dir('googleservice/src') {
+					script {
 						withSonarQubeEnv('sonar-server') {
 						sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
 						-Dsonar.projectKey=googleservice -Dsonar.exclusions=output/** '''
@@ -204,6 +204,13 @@ pipeline {
     	always {
       		dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
 			publishHTML([allowMissing: false, alwaysLinkToLastBuild: true, keepAll: false, reportDir: 'googleservice/output/coverage/jest', reportFiles: 'index.html', reportName: 'UNIT TEST JEST Report', reportTitles: 'unit test with jest', useWrapperFileDirectly: true])
+			emailext attachLog: true,
+			subject: "'${currentBuild.result}'",
+			body: "Project: ${env.JOB_NAME}<br/>" +
+				"Build Number: ${env.BUILD_NUMBER}<br/>" +
+				"URL: ${env.BUILD_URL}<br/>",
+			to: 'the.coding.nothingdev@gmail.com',                          
+			attachmentsPattern: 'trivyfs.txt,trivyimage.txt'
     	}
   	}
 	
