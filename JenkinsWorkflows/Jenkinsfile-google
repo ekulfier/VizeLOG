@@ -146,7 +146,7 @@ pipeline {
 									sleep(60)
 							
 									// Check the rollout status of the deployment
-									def rolloutStatus = sh(script: "kubectl -n dev rollout status deploy ${deploymentName} --timeout 10s", returnStatus: true).trim()
+									def rolloutStatus = sh(script: "kubectl -n dev rollout status deploy ${deploymentName} --timeout 10s", returnStatus: true).toString().trim()
 									
 									// If rollout status indicates failure, undo the deployment
 									if (rolloutStatus !=~ /.*successfully rolled out.*/) {
