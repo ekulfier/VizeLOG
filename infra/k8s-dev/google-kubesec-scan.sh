@@ -5,15 +5,15 @@
 #kubesec-scan.sh
 
 # using kubesec v2 api
-scan_result=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan)
+# scan_result=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan)
 scan_message=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan | jq .[0].message -r ) 
 scan_score=$(curl -sSX POST --data-binary @"google-depl-dev.yaml" https://v2.kubesec.io/scan | jq .[0].score ) 
 
 
 # using kubesec docker image for scanning
-scan_result=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml)
-scan_message=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].message -r)
-scan_score=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | jq .[].score)
+# scan_result=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml)
+# scan_message=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].message -r)
+# scan_score=$(docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].score)
 
 	
     # Kubesec scan result processing

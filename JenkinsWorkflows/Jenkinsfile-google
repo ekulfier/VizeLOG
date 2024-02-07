@@ -2,7 +2,6 @@ pipeline {
 	agent any
 
 	tools {
-        jdk 'jdk17'
         nodejs 'node18'
     }
 
@@ -85,7 +84,7 @@ pipeline {
 		stage('Docker Build and Push') {
 			steps {
 				dir("googleservice") {
-					withDockerRegistry([credentialsId: "docker", url: ""]) {
+					withDockerRegistry(credentialsId: "docker", toolName: 'docker') {
 						sh 'printenv'
 						sh "docker build -t ${imageName} . "
 						sh 'docker push ${imageName}'
@@ -98,40 +97,35 @@ pipeline {
 			steps {
 				parallel(
 					"OPA Scan": {
-						dir("infra") {
-							dir("k8s-dev") {
-								sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego google-depl-dev.yaml'
-							}
+						dir("infra/k8s-dev") {
+							sh 'docker run --rm -v $(pwd):/project openpolicyagent/conftest test --policy opa-k8s-security.rego google-depl-dev.yaml'
 						}
 					},
 					"Kubesec Scan": {
-						dir("infra") {
-							dir("k8s-dev") {
-								withDockerRegistry([credentialsId: "docker", url: ""]) {
-									script {
-										def scanMessage = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].message -r', returnStdout: true).trim()
-										def scanScore = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].score', returnStdout: true).trim()
-					
-										echo "Score is ${scanScore}"
-										echo "Kubesec Scan ${scanMessage}"
-					
-										if (scanScore.toInteger() >= 4) {
-											echo "Scanning Kubernetes Resource has Passed"
-										} else {
-											echo "Score is ${scanScore}, which is less than 4."
-											echo "Scanning Kubernetes Resource has Failed"
-											error "Scanning Kubernetes Resource has Failed"
-										}
-									}
-								}
-							}
+						dir("infra/k8s-dev") {
+							sh "bash google-kubesec-scan.sh"
+							// withDockerRegistry(credentialsId: "docker", toolName: 'docker') {
+								// script {
+								// 	def scanMessage = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].message -r', returnStdout: true).trim()
+								// 	def scanScore = sh(script: 'docker run -i kubesec/kubesec:512c5e0 scan /dev/stdin < google-depl-dev.yaml | docker run -i --rm stedolan/jq .[0].score', returnStdout: true).trim()
+				
+								// 	echo "Score is ${scanScore}"
+								// 	echo "Kubesec Scan ${scanMessage}"
+				
+								// 	if (scanScore.toInteger() >= 4) {
+								// 		echo "Scanning Kubernetes Resource has Passed"
+								// 	} else {
+								// 		echo "Score is ${scanScore}, which is less than 4."
+								// 		echo "Scanning Kubernetes Resource has Failed"
+								// 		error "Scanning Kubernetes Resource has Failed"
+								// 	}
+								// }
+							// }
 						}
 					},
 					"Trivy Scan": {
-						dir("infra") {
-							dir("k8s-dev") {
-								sh "bash trivy-k8s-scan.sh"
-							}
+						dir("infra/k8s-dev") {
+							sh "bash trivy-k8s-scan.sh"
 						}
 					}
 				)
@@ -180,50 +174,6 @@ pipeline {
                 }
             }
         }
-
-		// stage('Kubernetes Deployment - DEV') {
-		// 	steps {
-		// 		dir("infra") {
-		// 			dir("k8s-dev") {
-		// 				withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-		// 					sh 'curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"'  
-		// 					sh 'chmod u+x ./kubectl'  
-		// 					sh './kubectl get nodes'
-		// 					sh "sed -i 's#replace#thecodingadventure/googleservice:${GIT_COMMIT}#g' google-depl-dev.yaml"
-		// 					sh "./kubectl apply -f google-depl-dev.yaml -n dev"
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-    	// }
-
-		// stage('K8S rollout Deployment - DEV') {
-		// 	steps {
-		// 		dir("infra") {
-		// 			dir("k8s-dev") {
-		// 				withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'kubernetes', contextName: '', credentialsId: 'SECRET_K8S_TOKEN', namespace: '', serverUrl: 'https://0CB2238B374B29AB00ACFCAC02C008E8.gr7.ap-southeast-1.eks.amazonaws.com']]) {
-		// 					sh '''
-		// 						#!/bin/bash
-
-		// 						sleep 60s
-
-		// 						curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.20.5/bin/linux/amd64/kubectl"
-		// 						chmod u+x ./kubectl
-
-		// 						if [[ $(./kubectl -n dev rollout status deploy ${deploymentName} --timeout 5s) != *"successfully rolled out"* ]]; 
-		// 						then     
-		// 							echo "Deployment ${deploymentName} Rollout has Failed"
-		// 							./kubectl -n dev rollout undo deploy ${deploymentName}
-		// 							exit 1;
-		// 						else
-		// 							echo "Deployment ${deploymentName} Rollout is Success"
-		// 						fi
-		// 					'''
-		// 				}
-		// 			}
-		// 		}
-		// 	}
-		// }
 
 	}
 

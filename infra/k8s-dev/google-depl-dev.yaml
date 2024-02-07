@@ -40,7 +40,7 @@ spec:
   selector:
     app: googleservice
   ports:
-    - name: youtubeservice
+    - name: googleservice
       protocol: TCP
       port: 3000
       targetPort: 3000
