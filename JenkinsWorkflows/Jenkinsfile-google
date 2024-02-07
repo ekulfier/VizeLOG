@@ -136,9 +136,11 @@ pipeline {
 							}
 						}
 					},
-						"Rollout Status": {
+					"Rollout Status": {
+						dir("infra/k8s-dev") {
 							withKubeConfig([credentialsId: 'kubeconfig']) {
 								sh "bash google-dev-k8s-deployment-rollout-status.sh"
+							}
 						}
 					}	
 				)
