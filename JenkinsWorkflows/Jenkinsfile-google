@@ -166,7 +166,7 @@ pipeline {
 
 		stage("Checkout from SCM") {
                steps {
-                   git branch: 'staging', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
+                   git branch: 'main', credentialsId: 'github', url: 'https://github.com/ekulfier/gitops-vizelog'
                }
         }
 
@@ -192,7 +192,7 @@ pipeline {
 						git commit -m "Updated Deployment Manifest"
 					"""
 					withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
-						sh "git push https://github.com/ekulfier/gitops-vizelog staging"
+						sh "git push https://github.com/ekulfier/gitops-vizelog main"
 					}
 				}   
             }
