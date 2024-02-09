@@ -28,7 +28,7 @@ pipeline {
 
 		stage('Unit Tests - npm test:ci') {
 			steps {
-				dir('googleservice') {
+				dir('googleservice/src') {
 					sh "npm install && npm run test:ci"
 				}
 			}

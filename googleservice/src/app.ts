@@ -5,7 +5,7 @@ import { json } from 'body-parser';
 import { searchTrendRouter } from './routes/search-trend';
 
 const app = express();
-// app.set('trust proxy', true);
+app.set('trust proxy', true);
 app.use(json());
 
 
