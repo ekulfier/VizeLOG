@@ -28,7 +28,7 @@ pipeline {
 
 		stage('Unit Tests - npm test:ci') {
 			steps {
-				dir('googleservice/src') {
+				dir('googleservice') {
 					sh "npm install && npm run test:ci"
 				}
 			}
@@ -42,7 +42,7 @@ pipeline {
 
 		stage('SonarQube - SAST') {
 			steps {
-				dir('googleservice') {
+				dir('googleservice/src') {
 					script {
 						withSonarQubeEnv('sonar-server') {
 						sh ''' $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=googleservice \
